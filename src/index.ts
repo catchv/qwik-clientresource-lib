@@ -1,0 +1,1 @@
+export { ClientResource } from "./components/clientresource/clientresource"
