@@ -6,6 +6,12 @@ Qwik의 routeLoader$, useResource$ + <Resource> 사용은 HTML 렌더링을 블�
 그리고 Qwik의 페이지 refresh시에 useResource$ 호출이 되지 않는데 해당 컴포넌트는 옵션을 통해서
 refresh을 허용한다.
 
+1. 설치
+```
+npm i qwik-clientresource-library
+```
+
+2. 사용방법
 ```
 import { $, component$ } from "@builder.io/qwik";
 import { server$, useNavigate, useLocation } from "@builder.io/qwik-city";
@@ -20,7 +26,7 @@ interface RevenueResponse {
 export const fetchServerCallData = server$(async (): Promise<RevenueResponse> => {
 
   try{
-    console.log("Fetching revenue data...");
+    console.log("Fetching data...");
     await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
     console.log("Data fetch completed after 3 seconds.");
 
@@ -80,19 +86,20 @@ export const Index4 = component$(() => {
 
   return (
     <main>
-      <h1 class="lusitana mb-4 text-xl md:text-2xl">Qwik routeLoader, useResource Stop!!!</h1>
+      <h1 class="lusitana mb-4 text-2xl">Qwik routeLoader, useResource Stop!!!</h1>
 
       {loc.isNavigating && (
-        <div class="loading-spinner">
+        <div class="">
           Loading... (navigating: {String(loc.isNavigating)})
         </div>
       )}      
 
-      <button class="bg-yellow-300" onClick$={()=>{
-        nav("", { forceReload: true });
-      }} >HAHAHAHA</button>
+      <button class="bg-yellow-300 rounded-xl py-1 px-3" onClick$={()=>{
+        nav();
+      }} >Refresh</button>
 
       <div class="flex flex-col">
+        <span class="text-2xl">Server call</span>
         <ClientResource
           refresh={true}
           fetchData={serverDataQrl}
@@ -103,7 +110,136 @@ export const Index4 = component$(() => {
       </div>
 
       <div class="flex flex-col">
-        <span>Client call</span>
+        <span class="text-2xl">Client call</span>
+        <ClientResource
+          refresh={true}
+          fetchData={clientDataQrl}
+          onResolved={onResolvedClientData}
+          onRejected={onRejectedData}
+          onPending={onPendingData}
+        />
+      </div>
+
+
+      <h1 class="lusitana mb-4 text-xl md:text-2xl">Qwik ClientResource Go!!!</h1>
+    </main>
+  );
+});
+
+export default Index4;
+```
+
+
+## Description
+Qwik's use of routeLoader$, useResource$, and <Resource> blocks HTML rendering, increasing the initial loading time.
+This library is called from the server to retrieve data when the component is displayed on the screen after the HTML initially loads.
+Also, while useResource$ is not called when Qwik refreshes the page, this component allows for a refresh via options.
+
+1. install
+```
+npm i qwik-clientresource-library
+```
+
+2. Usage
+```
+import { $, component$ } from "@builder.io/qwik";
+import { server$, useNavigate, useLocation } from "@builder.io/qwik-city";
+import { ClientResource } from "qwik-clientresource-library";
+
+interface RevenueResponse {
+  error?: string;
+  code?: string;
+  data?: Array<{ id: number; num: number }>;
+}
+
+export const fetchServerCallData = server$(async (): Promise<RevenueResponse> => {
+
+  try{
+    console.log("Fetching data...");
+    await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
+    console.log("Data fetch completed after 3 seconds.");
+
+    return {
+      data: [
+        { id: 1, num: 10 },
+        { id: 1, num: 10 },
+        { id: 1, num: 10 },
+        { id: 1, num: 10 },
+      ],
+    };
+  } catch {
+    throw new Error("Failed to fetch Test.");
+  }
+});
+
+export const fetchClientCallData = $(async () => {
+  try {
+    // DB/API 호출
+    const res = await fetch("http://localhost:5173/api/data");
+    return await res.json();
+  } catch (error) {
+    return { error: "Failed to fetch revenue" + error };
+  }
+});
+
+export const Index4 = component$(() => {
+  // 상단에 QRL 함수들 정의
+  const serverDataQrl = $(async () => {
+    const result= await fetchServerCallData(); // 직접 await (catch는 useResource$에서)
+    return result;
+  });
+
+  const clientDataQrl = $(async () => {
+    const result= await fetchClientCallData(); // 직접 await (catch는 useResource$에서)
+    return result;
+  });  
+
+  const onResolvedServerData = $((value: any) => (
+    <div>onResolved: {JSON.stringify(value)}</div>
+  ));
+
+  const onResolvedClientData = $((value: {message: string}) => (
+    <div>onResolved: 
+      <span>{value.message}</span>
+    </div>
+  ));  
+
+  const onRejectedData = $((error: Error) => (
+    <div>Error: {error.message}</div>
+  ));
+
+  const onPendingData = $(() => <div>Loading...</div>);
+
+  const nav = useNavigate();
+  const loc = useLocation();
+
+  return (
+    <main>
+      <h1 class="lusitana mb-4 text-2xl">Qwik routeLoader, useResource Stop!!!</h1>
+
+      {loc.isNavigating && (
+        <div class="">
+          Loading... (navigating: {String(loc.isNavigating)})
+        </div>
+      )}      
+
+      <button class="bg-yellow-300 rounded-xl py-1 px-3" onClick$={()=>{
+        nav();
+      }} >Refresh</button>
+
+      <div class="flex flex-col">
+        <span class="text-2xl">Server call</span>
+        <ClientResource
+          refresh={true}
+          fetchData={serverDataQrl}
+          onResolved={onResolvedServerData}
+          onRejected={onRejectedData}
+          onPending={onPendingData}
+        />
+      </div>
+
+      <div class="flex flex-col">
+        <span class="text-2xl">Client call</span>
         <ClientResource
           refresh={true}
           fetchData={clientDataQrl}
