@@ -1,7 +1,11 @@
 {
   "name": "qwik-clientresource-library",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A library that makes asynchronous calls from the client - nonblocking",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/catchv/qwik-clientresource-lib"
+  },
   "main": "./lib/index.qwik.mjs",
   "qwik": "./lib/index.qwik.mjs",
   "types": "./lib-types/index.d.ts",

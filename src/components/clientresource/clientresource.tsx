@@ -31,13 +31,7 @@ export const ClientResource = component$(
       const controller = new AbortController();
       cleanup(() => controller.abort());
 
-      try {
-        console.log("resource isBroswer", isBrowser);
-        return await props.fetchData(); // 여기에 catch 추가로 로컬 처리
-      } catch (error) {
-        console.error("ClientResource fetch error:", error, typeof error);
-        throw new Error("ClientResource fetch error:" + error); // 다시 throw 해서 Resource onRejected 트리거
-      }
+      return await props.fetchData(); // 여기에 catch 추가로 로컬 처리
     });
 
     useVisibleTask$(() => {
